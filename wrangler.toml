@@ -1,0 +1,5 @@
+[[ d1_databases ]]
+binding = "DB"
+database_name = "metadb"
+database_id = "b8b5782a-0fe3-41a6-b672-2b8ff3374532"
+preview_database_id = "b8b5782a-0fe3-41a6-b672-2b8ff3374532"
