@@ -1,4 +1,5 @@
 #!/usr/bin/env zx
+/* eslint-disable no-loop-func */
 /* eslint-disable no-undef */
 import chunk from "lodash/fp/chunk.js";
 import filter from "lodash/fp/filter.js";
@@ -8,6 +9,7 @@ import map from "lodash/fp/map.js";
 import replace from "lodash/fp/replace.js";
 import sortBy from "lodash/fp/sortBy.js";
 import uniq from "lodash/fp/uniq.js";
+import { retry } from "zx/experimental";
 import "zx/globals";
 
 const albums = await fs.readJson("./seed/albums-17-12-22.json");
@@ -24,7 +26,10 @@ const genreValues = flow(
 )(albums).join(",");
 
 const genresInsertCommand = `INSERT OR REPLACE INTO Genres (Name) VALUES ${genreValues}`;
-await $`wrangler d1 execute metadb --command ${genresInsertCommand} --local`;
+await retry(
+  10,
+  () => $`wrangler d1 execute metadb --command ${genresInsertCommand} --local`
+);
 
 const albumValuesChunked = chunk(200)(
   map(
@@ -33,6 +38,7 @@ const albumValuesChunked = chunk(200)(
         map(
           flow(
             replace(/'/g, "''"), // Escape single quotes for Sqlite
+            replace(/;/g, ":"), // Replace semicolon for D1, see https://github.com/cloudflare/wrangler2/issues/2227
             (_) => `'${_}'`
           )
         )([
@@ -54,10 +60,13 @@ const albumValuesChunked = chunk(200)(
 for (const chunk of albumValuesChunked) {
   const albumValues = chunk.join(",");
   const albumsInsertCommand = `INSERT OR REPLACE INTO Albums (Url,Title,Artist,ReleaseDate,Score,CriticNumber,Summary,RecordLabel,ImageUrl) VALUES ${albumValues}`;
-  await $`wrangler d1 execute metadb --command ${albumsInsertCommand} --local`;
+  await retry(
+    10,
+    () => $`wrangler d1 execute metadb --command ${albumsInsertCommand} --local`
+  );
 }
 
-const albumGenresValuesChunked = chunk(1000)(
+const albumGenresValuesChunked = chunk(200)(
   flow(
     map((album) =>
       flow(
@@ -75,7 +84,11 @@ const albumGenresValuesChunked = chunk(1000)(
 for (const chunk of albumGenresValuesChunked) {
   const albumGenresValues = chunk.join(",");
   const albumGenresInsertCommand = `INSERT OR REPLACE INTO AlbumGenres (AlbumUrl,GenreName) VALUES ${albumGenresValues}`;
-  await $`wrangler d1 execute metadb --command ${albumGenresInsertCommand} --local`;
+  await retry(
+    10,
+    () =>
+      $`wrangler d1 execute metadb --command ${albumGenresInsertCommand} --local`
+  );
 }
 
 console.log("");
