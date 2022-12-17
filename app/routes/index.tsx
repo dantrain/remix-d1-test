@@ -9,7 +9,15 @@ type Context = {
 export const loader: LoaderFunction = async ({ context }) => {
   const ctx = context as Context;
 
-  const data = await ctx.DB.prepare("SELECT * FROM Albums LIMIT 10").all();
+  const data = await ctx.DB.prepare(
+    `SELECT Url, Title, Artist, ReleaseDate, Score, CriticNumber, Summary, RecordLabel, ImageUrl, GROUP_CONCAT(Name) Genres
+    FROM Albums
+    JOIN AlbumGenres ON AlbumGenres.AlbumUrl = Albums.Url
+    JOIN Genres ON Genres.name = AlbumGenres.GenreName
+    GROUP BY Url
+    ORDER BY ReleaseDate DESC
+    LIMIT 200`
+  ).all();
 
   return json({ data });
 };
