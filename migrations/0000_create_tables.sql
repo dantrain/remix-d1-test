@@ -5,7 +5,7 @@ CREATE TABLE Albums (
   Url TEXT NOT NULL UNIQUE,
   Title TEXT NOT NULL,
   Artist TEXT NOT NULL,
-  ReleaseDate TEXT NOT NULL,
+  ReleaseDate INT NOT NULL,
   Score INT NOT NULL,
   CriticNumber INTEGER NOT NULL,
   Summary TEXT NOT NULL,

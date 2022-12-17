@@ -25,7 +25,7 @@ const albumValuesChunked = chunk(200)(
           _.url,
           _.title,
           _.artist,
-          _.release_date.$date,
+          new Date(_.release_date.$date).valueOf(),
           _.score,
           _.critic_number,
           _.summary,
@@ -47,7 +47,7 @@ for (const chunk of albumValuesChunked) {
   const albumsInsertCommand = `INSERT OR REPLACE INTO Albums (Url,Title,Artist,ReleaseDate,Score,CriticNumber,Summary,RecordLabel,ImageUrl,Genres) VALUES ${albumValues}`;
   await retry(
     10,
-    () => $`wrangler d1 execute metadb --command ${albumsInsertCommand}`
+    () => $`wrangler d1 execute metadb --command ${albumsInsertCommand} --local`
   );
 }
 
