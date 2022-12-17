@@ -9,7 +9,7 @@ type Context = {
 export const loader: LoaderFunction = async ({ context }) => {
   const ctx = context as Context;
 
-  const data = await ctx.DB.prepare("SELECT * FROM Customers").all();
+  const data = await ctx.DB.prepare("SELECT * FROM Albums LIMIT 10").all();
 
   return json({ data });
 };
