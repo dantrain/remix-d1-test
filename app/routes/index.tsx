@@ -1,7 +1,8 @@
 import type { LoaderFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { useLoaderData } from "@remix-run/react";
+import { useFetcher, useLoaderData } from "@remix-run/react";
 import { omit } from "lodash";
+import { useEffect, useState } from "react";
 
 type Context = {
   DB: D1Database;
@@ -51,6 +52,21 @@ export const loader: LoaderFunction = async ({ request, context }) => {
 
 export default function Index() {
   const { data } = useLoaderData();
+  const [state, setState] = useState(data);
+
+  const fetcher = useFetcher();
+
+  const handleRefetch = () => {
+    const search = document.location.search;
+    fetcher.load(`/${search ? `${search}&` : "?"}index`);
+  };
+
+  useEffect(() => {
+    if (fetcher.type === "done") {
+      setState(fetcher.data.data);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetcher.type]);
 
   return (
     <div
@@ -62,9 +78,10 @@ export default function Index() {
       }}
     >
       <h1>Remix D1 Test</h1>
+      <button onClick={handleRefetch}>Refetch</button>
       <pre style={{ background: "#eee", padding: "1em", overflow: "hidden" }}>
         {JSON.stringify(
-          { ...omit(data, "results"), results: data.results },
+          { ...omit(state, "results"), results: state.results },
           null,
           4
         )}
