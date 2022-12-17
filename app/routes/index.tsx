@@ -1,6 +1,7 @@
 import type { LoaderFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
+import { omit } from "lodash";
 
 type Context = {
   DB: D1Database;
@@ -49,7 +50,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
 };
 
 export default function Index() {
-  const data = useLoaderData();
+  const { data } = useLoaderData();
 
   return (
     <div
@@ -62,7 +63,11 @@ export default function Index() {
     >
       <h1>Remix D1 Test</h1>
       <pre style={{ background: "#eee", padding: "1em", overflow: "hidden" }}>
-        {JSON.stringify(data, null, 4)}
+        {JSON.stringify(
+          { ...omit(data, "results"), results: data.results },
+          null,
+          4
+        )}
       </pre>
     </div>
   );
