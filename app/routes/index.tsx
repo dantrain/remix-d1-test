@@ -6,21 +6,44 @@ type Context = {
   DB: D1Database;
 };
 
-export const loader: LoaderFunction = async ({ context }) => {
+export const loader: LoaderFunction = async ({ request, context }) => {
   const ctx = context as Context;
 
-  // AND (
-  //   Genres LIKE '%,Indie Rock,%'
-  //   OR Genres LIKE '%,Rap,%'
-  // )
-  const data = await ctx.DB.prepare(
-    `SELECT * FROM Albums
+  const url = new URL(request.url);
+  const minScore = +(url.searchParams.get("min") ?? 70);
+  const maxScore = +(url.searchParams.get("max") ?? 100);
+  const reviews = +(url.searchParams.get("reviews") ?? 10);
+  const genres = url.searchParams.get("genres")?.split(",") ?? [];
+  const skip = +(url.searchParams.get("skip") ?? 0);
+
+  const query = `SELECT * FROM Albums
     WHERE
-      Score >= 80
-      AND CriticNumber >= 10
+      Score >= ?1
+      AND Score <= ?2
+      AND CriticNumber >= ?3
+      ${
+        genres.length
+          ? `AND (${genres
+              .map((_, i) => `Genres LIKE ?${i + 6}`)
+              .join(" OR ")})`
+          : ""
+      }
     ORDER BY ReleaseDate DESC
-    LIMIT 200`
-  ).all();
+    LIMIT ?4
+    OFFSET ?5`;
+
+  const binding = [
+    minScore,
+    maxScore,
+    reviews,
+    200,
+    skip,
+    ...genres.map((_) => `%,${_},%`),
+  ];
+
+  const data = await ctx.DB.prepare(query)
+    .bind(...binding)
+    .all();
 
   return json({ data });
 };
