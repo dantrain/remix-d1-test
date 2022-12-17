@@ -14,3 +14,5 @@ CREATE TABLE Albums (
   Genres TEXT NOT NULL,
   PRIMARY KEY ('Url')
 );
+
+CREATE INDEX IF NOT EXISTS Albums_ReleaseDate ON Albums (ReleaseDate DESC);

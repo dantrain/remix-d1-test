@@ -9,15 +9,15 @@ type Context = {
 export const loader: LoaderFunction = async ({ context }) => {
   const ctx = context as Context;
 
+  // AND (
+  //   Genres LIKE '%,Indie Rock,%'
+  //   OR Genres LIKE '%,Rap,%'
+  // )
   const data = await ctx.DB.prepare(
     `SELECT * FROM Albums
     WHERE
       Score >= 80
       AND CriticNumber >= 10
-      AND (
-        Genres LIKE '%,Indie Rock,%'
-        OR Genres LIKE '%,Rap,%'
-      )
     ORDER BY ReleaseDate DESC
     LIMIT 200`
   ).all();
